@@ -83,6 +83,7 @@ def get_top_tracks(offset):
             'score': 100.00
         }
         track_list.append(track_object)
+    return track_list
 
 
 
@@ -91,6 +92,11 @@ def get_top_tracks(offset):
 def get_audio_features():
     for track in track_list:
         # Needed to put the try/except block here since not all tracks have audio features, especially more obscure or underground tracks. Need to figure out how this plays into the score deduction still, since this doesn't change the initial value from 100 at all, which would give preference to tracks that don't have audio features available, or only have values associated with some features.
+
+
+        # TO DO: Update so that it tries each feature separately, otherwise it might bail out at any point if it doesn't find a value
+
+
         try:
             track_audio_features = sp.audio_features(tracks=track['track_id'])[0]
             track['acousticness'] = track_audio_features['acousticness']
@@ -136,8 +142,7 @@ def set_novel_track_list(ids):
 
 
 # Get unfamiliar (new) track IDs, and triggers set_novel_track_list to construct a new list of track_list of new and unfamiliar music
-def get_new_tracks():
-    global track_list # needed to use the global keyword because the function didn't recognize the global track_list object below
+def get_new_tracks(track_list):
     # Get IDs for all familiar tracks from initial values of track_list for later comparison
     familiar_track_ids = []
     for track in track_list:
@@ -215,7 +220,7 @@ def genre_score_deduction(genre_input):
     # For each track...
     for track in track_list:
         # If any genre of that track matches what the user put in...
-        if (any(genre in track['genres'] for genre in input_genres_list)):
+        if any(genre in track['genres'] for genre in input_genres_list):
             continue # ...do nothing (retain a higher score)
         else:
             track['score'] -= 30 # ...if there is NOT a match, deduce 30 points from the score, which deprioritizes the track
@@ -311,7 +316,7 @@ if new_or_familiar == '1':
     get_audio_features()
 if new_or_familiar == '2':
     # Fires get_new_tracks to rewrite top_tracks, using the current top tracks for its operations
-    get_new_tracks()
+    get_new_tracks(track_list)
     get_audio_features()
 
 set_artist_genres() # Genres are properties of artists, not tracks. This function pulls genres from artists and parses the genres to each track, which isn't logically perfect, but is a feature I think will be useful to users.
