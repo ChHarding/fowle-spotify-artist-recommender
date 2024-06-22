@@ -80,7 +80,8 @@ def get_top_tracks(offset):
             'liveness': 1.0,
             'speechiness': 1.0,
             'valence': 1.0,
-            'score': 100.00
+            'score': 100.00,
+            'missing_audio_features': False
         }
         track_list.append(track_object)
     return track_list
@@ -88,26 +89,63 @@ def get_top_tracks(offset):
 
 
 
-# Get audio features for all tracks in track_list
+# Gets the audio features of all tracks, and changes missing_audio_features flag to True if audio features are missing
 def get_audio_features():
+    # Get track_ids for all tracks in track_list for easier lookup
+    track_ids = []
     for track in track_list:
-        # Needed to put the try/except block here since not all tracks have audio features, especially more obscure or underground tracks. Need to figure out how this plays into the score deduction still, since this doesn't change the initial value from 100 at all, which would give preference to tracks that don't have audio features available, or only have values associated with some features.
+        track_ids.append(track['track_id'])
+    iterations = len(track_list) // 100 # sp.audio_features has an upper limit of 100 track ids
+    remainder = len(track_list) % 100
+    # Adds 1 to the number of iterations if the length of track_list is not perfectly divisible by 100
+    if remainder > 0:
+        iterations += 1
+    offset = 0
+    for i in range(iterations):
+        audio_features_list = [] # Instantiate the list of audio features for the current group of tracks
+        try: # For when there are exactly 100 available before the end of the list is reached
+            audio_features_list = sp.audio_features(tracks=track_ids[offset:offset+100])
+        except: # For the end of the list if it is not divisible by 100
+            audio_features_list = sp.audio_features(tracks=track_ids[offset:])
+        for track_audio in audio_features_list:
+            # If there are any audio features available for this track...
+            if not track_audio == None:
+                # Look for a match in the current track_list
+                for main_track in track_list:
+                    if track_audio['id'] == main_track['track_id']:
+                        # For each audio feature, set the value. If it does not exist (None), change the missing features flag to True for later handling
+                        if not track_audio['acousticness'] == None:
+                            main_track['acousticness'] = track_audio['acousticness']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['danceability'] == None:
+                            main_track['danceability'] = track_audio['danceability']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['energy'] == None:
+                            main_track['energy'] = track_audio['energy']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['instrumentalness'] == None:
+                            main_track['instrumentalness'] = track_audio['instrumentalness']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['liveness'] == None:
+                            main_track['liveness'] = track_audio['liveness']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['speechiness'] == None:
+                            main_track['speechiness'] = track_audio['speechiness']
+                        else:
+                            main_track['missing_audio_features'] = True
+                        if not track_audio['valence'] == None:
+                            main_track['valence'] = track_audio['valence']
+                        else:
+                            main_track['missing_audio_features'] = True
+        offset += 100
+        # NEXT: Add a function to validate audio features
+        # If all audio features == 100.00, then the track had None audio features. change missing_audio_features to True
 
-
-        # TO DO: Update so that it tries each feature separately, otherwise it might bail out at any point if it doesn't find a value
-
-
-        try:
-            track_audio_features = sp.audio_features(tracks=track['track_id'])[0]
-            track['acousticness'] = track_audio_features['acousticness']
-            track['danceability'] = track_audio_features['danceability']
-            track['energy'] = track_audio_features['energy']
-            track['instrumentalness'] = track_audio_features['instrumentalness']
-            track['liveness'] = track_audio_features['liveness']
-            track['speechiness'] = track_audio_features['speechiness']
-            track['valence'] = track_audio_features['valence']
-        except:
-            continue
 
 
 
@@ -133,7 +171,8 @@ def set_novel_track_list(ids):
             'liveness': 1.0,
             'speechiness': 1.0,
             'valence': 1.0,
-            'score': 100.00
+            'score': 100.00,
+            'missing_audio_features': False
         }
         # Writes each new track object to the newly scrubbed track_list
         track_list.append(track_object)
