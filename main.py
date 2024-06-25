@@ -58,11 +58,14 @@ track_list = []
 
 
 
-# Get current user's top 100 tracks on program startup
+
 def get_top_tracks(offset):
-    # current_user_top_tracks gets the user's top tracks of 'long_term' (i.e., the last year). It can only produce 50 tracks at a time, so it needs to fire multiple times to get a larger list. It uses the offset flag to paginate through current results.
+    '''Gets the current signed in users' top tracks. Fires after the user signs in.
+    Parameters: offset - the starting value for getting top tracks. E.g, an offset of 50 gets the 50th-100th top tracks.'''
     top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term', offset=offset)
-    # Loop parses all track data needed for the program from the response into a track object, all of which are stored in track_list
+    # Loop parses all track data needed for the program from the response into a track object
+    # Each object is stored in new_tracks, which is returned and .extended() into track_list
+    new_tracks = []
     for track in top_tracks['items']:
         track_object = {
             'track_id': track['id'],
@@ -72,7 +75,6 @@ def get_top_tracks(offset):
             'track_name': track['name'],
             'album_name': track['album']['name'],
             'genres': [],
-            'artist_image': track['album']['images'][0]['url'] if track['album']['images'] else None, # Grabs first image if there is one available, otherwise saves nothing
             'acousticness': 1.0,
             'danceability': 1.0,
             'energy': 1.0,
@@ -83,14 +85,18 @@ def get_top_tracks(offset):
             'score': 100.00,
             'missing_audio_features': False
         }
-        track_list.append(track_object)
-    return track_list
+        new_tracks.append(track_object)
+    return new_tracks
 
 
 
 
-# Gets the audio features of all tracks, and changes missing_audio_features flag to True if audio features are missing
-def get_audio_features():
+def get_audio_features(track_list):
+    '''Gets the audio features of each track in track_list.
+    Modifies missing_audio_features flag to True if any or all audio features are missing on the track.
+    Parameters: track_list - the current list of all tracks.
+    Returns: an updated track_list'''
+
     # Get track_ids for all tracks in track_list for easier lookup
     track_ids = []
     for track in track_list:
@@ -109,51 +115,55 @@ def get_audio_features():
             audio_features_list = sp.audio_features(tracks=track_ids[offset:])
         for track_audio in audio_features_list:
             # If there are any audio features available for this track...
-            if not track_audio == None:
+            if track_audio != None:
                 # Look for a match in the current track_list
                 for main_track in track_list:
                     if track_audio['id'] == main_track['track_id']:
                         # For each audio feature, set the value. If it does not exist (None), change the missing features flag to True for later handling
-                        if not track_audio['acousticness'] == None:
+                        if track_audio['acousticness'] != None:
                             main_track['acousticness'] = track_audio['acousticness']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['danceability'] == None:
+                        if track_audio['danceability'] != None:
                             main_track['danceability'] = track_audio['danceability']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['energy'] == None:
+                        if track_audio['energy'] != None:
                             main_track['energy'] = track_audio['energy']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['instrumentalness'] == None:
+                        if track_audio['instrumentalness'] != None:
                             main_track['instrumentalness'] = track_audio['instrumentalness']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['liveness'] == None:
+                        if track_audio['liveness'] != None:
                             main_track['liveness'] = track_audio['liveness']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['speechiness'] == None:
+                        if track_audio['speechiness'] != None:
                             main_track['speechiness'] = track_audio['speechiness']
                         else:
                             main_track['missing_audio_features'] = True
-                        if not track_audio['valence'] == None:
+                        if track_audio['valence'] != None:
                             main_track['valence'] = track_audio['valence']
                         else:
                             main_track['missing_audio_features'] = True
         offset += 100
-        # NEXT: Add a function to validate audio features
-        # If all audio features == 100.00, then the track had None audio features. change missing_audio_features to True
+    return track_list
+    # NEXT: Add a function to validate audio features
+    # If all audio features == 100.00, then the track had None audio features. change missing_audio_features to True
 
 
 
 
-
-# Set track ids from get_new_tracks as new track objects in track_list
 def set_novel_track_list(ids):
+    '''Gets tracks details from get_new_tracks and returns a list of new track objects.
+    Parameters: ids - a list of track IDs.
+    Returns: a list of new track objects to .extend() into track_list'''
+
     # sp.tracks only accepts up to 50 track IDs, so this needs to loop in get_new_tracks if there are more than 50 available tracks
     tracks_results = sp.tracks(ids)
+    new_tracks = []
     for track in tracks_results['tracks']:
         track_object = {
             'track_id': track['id'],
@@ -163,7 +173,6 @@ def set_novel_track_list(ids):
             'track_name': track['name'],
             'album_name': track['album']['name'],
             'genres': [],
-            'artist_image': track['album']['images'][0]['url'] if track['album']['images'] else None,
             'acousticness': 1.0,
             'danceability': 1.0,
             'energy': 1.0,
@@ -175,13 +184,18 @@ def set_novel_track_list(ids):
             'missing_audio_features': False
         }
         # Writes each new track object to the newly scrubbed track_list
-        track_list.append(track_object)
+        new_tracks.append(track_object)
+    return new_tracks
 
 
 
 
-# Get unfamiliar (new) track IDs, and triggers set_novel_track_list to construct a new list of track_list of new and unfamiliar music
 def get_new_tracks(track_list):
+    '''Get unfamiliar (new, novel) track IDs using the sp.recommendations() method on the current track_list of a user's top tracks.
+    Calls set_novel_track_list() to get track details from track IDs.
+    Parameters: track_list
+    Returns: track_list => updated with new tracks'''
+
     # Get IDs for all familiar tracks from initial values of track_list for later comparison
     familiar_track_ids = []
     for track in track_list:
@@ -190,7 +204,6 @@ def get_new_tracks(track_list):
     # Instantiate list to collect track ids of recommended tracks
     new_track_ids = []
 
-    # Counter used to loop over top 100 tracks in track_list (REMINDER: ORDER LIST AT START OF PROCESS, NOT END??? - no score available yet...hmm)
     familiar_track_counter = 0
 
     # Loops over top 100 tracks 20 times in 5-item increments. This is so that each track in the top 100 is fed to sp.recommendations
@@ -202,9 +215,9 @@ def get_new_tracks(track_list):
             # Adds the track ID to the new list
             new_track_ids.append(recommended_track['id'])
 
-        # Increments so that the loop looks at the next 5 familiar tracks
+        # Increments so that the loop uses the next 5 familiar tracks in track_list for new recommendations
         familiar_track_counter += 5
-    
+
     # Checks if new_track_ids exist in familiar_track_ids; removes duplicates and builds a new list of ids
     # This is so that the user truly finds new music using the app. The sp.recommendations method doesn't necessarily return new music.
     actually_new_track_ids = [id for id in new_track_ids if id not in familiar_track_ids]
@@ -213,17 +226,34 @@ def get_new_tracks(track_list):
     # Delete contents of track_list to make room for novel track objects
     track_list = []
 
-    if len(cleaned_new_track_ids) > 50:
-        set_novel_track_list(cleaned_new_track_ids[:50]) # Trigger once for the first 50
-        set_novel_track_list(cleaned_new_track_ids[50:]) # Trigger again for everything after the first 50. Because the limit of 100 tracks is hard coded, only these two function calls are necessary. The 50 limit is a constraint of the sp.tracks method
-    else:
-        set_novel_track_list(cleaned_new_track_ids)
+    # Get the number of times the length of cleaned_new_track_ids can be iterated over in blocks of 50
+    iterations = len(cleaned_new_track_ids) // 50 # sp.tracks has an upper limit of 50 track ids
+    remainder = len(cleaned_new_track_ids) % 50
+    # Adds 1 to the number of iterations if the length of track_list is not perfectly divisible by 50
+    if remainder > 0:
+        iterations += 1
+    offset = 0
+    # For each group of 50 tracks, get the track details and .extend() into track_list
+    for i in range(iterations):
+        try:
+            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:offset+50])
+            track_list.extend(new_tracks)
+        except:
+            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:])
+            track_list.extend(new_tracks)
+        offset += 50
+    return track_list
+    
 
     
 
+def set_artist_genres(track_list):
+    '''Sets the genres for each track.
+    Genres are properties of artists, not tracks. 
+    Thus, this pulls the genres of the artists of each track and appends those genres to the genres property of each track object.
+    Parameters: track_list
+    Returns: track_list, updated with genres'''
 
-# Set the genres for each tracks. Genres are properties of artists, not tracks, so this function extracts artist info from tracks and pushes the genre information to the track object in track_list
-def set_artist_genres():
     for track in track_list:
         # for if there are multiple artists on one track
         for uri in track['artist_uris']:
@@ -232,11 +262,15 @@ def set_artist_genres():
             for genre in genres:
                 track['genres'].append(genre)
 
+    return track_list
 
 
 
-# Creates a dictionary of all genres for later reference
-def create_genres_dict():
+
+def create_genres_dict(track_list):
+    '''Creates a dictionary containing all genres. Each genre is paired with an indexed key for user entry.
+    Parameters: track_list
+    Returns: temp_genres_dict (List)'''
     # Instantiate temporary list, which is returned and saved to the global genres_dict list
     temp_genres_list = []
     # For loop saves all genres from all tracks into temp_genres_list
@@ -251,10 +285,15 @@ def create_genres_dict():
 
 
 
-# Deduce scores for tracks that don't contain any of the selected genres
 def genre_score_deduction(genre_input):
+    '''Deduces each track object's score if the user's genre input does not match any genre of each track.
+    Parameters: genre_input => the genres the user selected in the main application
+    Returns: None'''
+
     input_list = genre_input.split(' ') # Turns user string input of genre keys into a list
-    # This compares the user input to the KEYS of genres_dict to retrieve the values. I opted to use this method so that the user simply needed to enter the numeric key instead of type out the genre name, which can get long and complicated and introduce more room for error.
+    # This compares the user input to the KEYS of genres_dict to retrieve the values. 
+    # I opted to use this method so that the user simply needed to enter the numeric key instead of type out the 
+    # genre name, which can get long and complicated and introduce more room for error.
     input_genres_list = [genres_dict[int(key)] for key in input_list] 
     # For each track...
     for track in track_list:
@@ -262,13 +301,16 @@ def genre_score_deduction(genre_input):
         if any(genre in track['genres'] for genre in input_genres_list):
             continue # ...do nothing (retain a higher score)
         else:
-            track['score'] -= 30 # ...if there is NOT a match, deduce 30 points from the score, which deprioritizes the track
+            track['score'] -= 20 # ...if there is NOT a match, deduce 20 points from the score
 
 
 
 
-# Deduce the track score based on feature input
-def feature_score_deduction(input_value, feature): # I am passing the feature name as an argument so I don't need to construct 7 functions for each audio feature
+def feature_score_deduction(input_value, feature):
+    '''Deduce each track's score based on the difference between each audio_feature and the audio_feature score provided by the user.
+    Parameters: input_value => the value the user provided for the audio_feature. feature => the name of the feature, e.g., 'acousticness'.
+    Returns: None'''
+
     for track in track_list:
         track_feature_value = track[feature]
         # This gets a positive value for the difference between what the user submitted and the value of the feature on the track
@@ -277,25 +319,30 @@ def feature_score_deduction(input_value, feature): # I am passing the feature na
             continue # ...do nothing (deduce 0 points)
         else: # If there is a difference in score and user input
             dissimilarity_percentage = value_difference / 100 # Get a "dissimilarity percentage"...
-            track['score'] -= 10 * dissimilarity_percentage # Normalize the dissimilarity to a maximum value of 10 points to deduce, then subtract those points from the track's score
+            track['score'] -= 12 * dissimilarity_percentage # Normalize the dissimilarity to a maximum value of 12 points to deduce, then subtract those points from the track's score
         
 
 
 
-# Get top tracks for list
-def get_final_playlist():
+def get_final_playlist(track_list):
+    '''Gets the final playlist displays it in the UI.
+    Parameters: track_list
+    Returns: top_30_tracks => List of tracks with the highest scores'''
+
     # Use sorted() with a lambda function to sort all list objects based on the track's score, starting with the highest score
     sorted_track_list = sorted(track_list, key=lambda track: track['score'], reverse=True)
+
     # Instantiate list for top 30
     top_30_tracks = []
+
     # Try/except block used for testing smaller batches to avoid rate limiting
-    try:
-        top_30_tracks = sorted_track_list[:30] # Returns the first 30 in the list, i.e., the 30 tracks with the highest scores
-    except:
-        top_30_tracks = sorted_track_list # If there are less than 30 tracks (from smaller requests done during testing), do nothing
-    # I'm shuffling the top 30 here to make the playlist more engaging to listen to. If the playlist was put in order from best to worst, it would get less enjoyable to listen to as the user progresses through it.
+    top_30_tracks = sorted_track_list[:30] # Returns the first 30 in the list, i.e., the 30 tracks with the highest scores
+
+    # I'm shuffling the top 30 here to make the playlist more engaging to listen to. 
+    # If the playlist was put in order from best to worst, it would get less enjoyable to listen to as the user progresses through it.
     random.shuffle(top_30_tracks)
-    # Final output
+
+    # Playlist output
     for idx, track in enumerate(top_30_tracks):
         print(f"{idx + 1}: {track['track_name']} - {', '.join(track['artists'])}\t Match: {round(track['score'], 2)}%")
     return top_30_tracks
@@ -303,9 +350,11 @@ def get_final_playlist():
 
 
 
-# Create a new playlist on Spotify
 def create_new_playlist(playlist):
-    # Get authenticated user information, then save the user's ID
+    '''Attempts to create a new public user playlist in Spotify with the 30 tracks recommended in this program.
+    Parameter: playlist => List of the top 30 tracks
+    Returns: None, end of the process'''
+
     current_user = sp.current_user()
     user_id = current_user['id']
     # Get a name for the new playlist
@@ -345,23 +394,28 @@ print("**********************************************************\n")
 # Set track_list to user's top 100 songs of the last year
 looper_offset = 0
 for i in range(2): # This fires only twice to mitigate rate limiting. The real application will fire get_top_tracks 
-    get_top_tracks(looper_offset)
+    new_tracks = get_top_tracks(looper_offset)
+    track_list.extend(new_tracks)
     looper_offset += 50
 
-# The user interface of the final product will make use of buttons and multi-select boxes, so I am choosing to not spend time working on input validation for this version since it won't be engaged in the final product.
+# The user interface of the final product will make use of buttons and multi-select boxes, 
+# so I am choosing to not spend time working on input validation for this version since it won't be engaged in the final product.
 new_or_familiar = input('Would you like to listen to familiar music or new music? Enter 1 for familiar and 2 for new: ') 
 if new_or_familiar == '1':
     # Retains the original top tracks, then gets the track's audio features to complete each track object for later calculations
-    get_audio_features()
+    track_list = get_audio_features(track_list)
 if new_or_familiar == '2':
     # Fires get_new_tracks to rewrite top_tracks, using the current top tracks for its operations
     get_new_tracks(track_list)
-    get_audio_features()
+    track_list = get_audio_features(track_list)
 
-set_artist_genres() # Genres are properties of artists, not tracks. This function pulls genres from artists and parses the genres to each track, which isn't logically perfect, but is a feature I think will be useful to users.
-genres_dict = create_genres_dict() # Creates a dictionary of genres for below...
+# Genres are properties of artists, not tracks. 
+# This function pulls genres from artists and parses the genres to each track, which isn't 
+# logically perfect, but is a feature I think will be useful to users
+track_list = set_artist_genres(track_list)
+genres_dict = create_genres_dict(track_list) # Creates a dictionary of genres for below...
 
-print('Here is a list of available genres. Enter the numbers of the genres you want to listen to, separated by a space (e.g., 1 4 5 24 8)')
+print('Here is a list of available genres. Enter the numbers of the genres you want to listen to, separated by a space (e.g., 1 43 5 24 8)')
 # For each genre in the list, display the genre with a key index. Users enter the index number to indicate what sounds good to them right now. This will be replaced with a multi-select interface in the final version.
 for idx, genre in genres_dict.items():
     print(f'{idx}: {genre}')
@@ -387,7 +441,7 @@ feature_score_deduction(speechiness_input_value, feature='speechiness')
 feature_score_deduction(valence_input_value, feature='valence')
 
 print("Here is your final playlist!")
-playlist = get_final_playlist() # Calculates and displays the final playlist, and saves to a variable for if the user wants to save the playlist to Spotify
+playlist = get_final_playlist(track_list) # Calculates and displays the final playlist, and saves to a variable for if the user wants to save the playlist to Spotify
 
 print()
 # Option for exporting the playlist to Spotify
