@@ -150,8 +150,6 @@ def get_audio_features(track_list):
                             main_track['missing_audio_features'] = True
         offset += 100
     return track_list
-    # NEXT: Add a function to validate audio features
-    # If all audio features == 100.00, then the track had None audio features. change missing_audio_features to True
 
 
 
@@ -207,7 +205,7 @@ def get_new_tracks(track_list):
     familiar_track_counter = 0
 
     # Loops over top 100 tracks 20 times in 5-item increments. This is so that each track in the top 100 is fed to sp.recommendations
-    for familiar_track_group in range(20):
+    for familiar_track_group in range(50):
         # Gets sp.recommendations for familiar tracks in track_list n through n+5
         recommended_tracks = sp.recommendations(seed_tracks=familiar_track_ids[familiar_track_counter:familiar_track_counter+5], limit=5)
 
@@ -320,7 +318,7 @@ def create_genres_dict(track_list):
 def genre_score_deduction(genre_input):
     '''Deduces each track object's score if the user's genre input does not match any genre of each track.
     Parameters: genre_input => the genres the user selected in the main application
-    Returns: None'''
+    Returns: None => score adjustments happen in-place'''
 
     input_list = genre_input.split(' ') # Turns user string input of genre keys into a list
     # This compares the user input to the KEYS of genres_dict to retrieve the values. 
@@ -341,7 +339,7 @@ def genre_score_deduction(genre_input):
 def feature_score_deduction(input_value, feature):
     '''Deduce each track's score based on the difference between each audio_feature and the audio_feature score provided by the user.
     Parameters: input_value => the value the user provided for the audio_feature. feature => the name of the feature, e.g., 'acousticness'.
-    Returns: None'''
+    Returns: None => score adjustments happen in-place'''
 
     for track in track_list:
         track_feature_value = track[feature]
@@ -367,7 +365,6 @@ def get_final_playlist(track_list):
     # Instantiate list for top 30
     top_30_tracks = []
 
-    # Try/except block used for testing smaller batches to avoid rate limiting
     top_30_tracks = sorted_track_list[:30] # Returns the first 30 in the list, i.e., the 30 tracks with the highest scores
 
     # I'm shuffling the top 30 here to make the playlist more engaging to listen to. 
@@ -425,13 +422,10 @@ print("**********************************************************\n")
 
 # Set track_list to user's top 100 songs of the last year
 looper_offset = 0
-for i in range(2): # This fires only twice to mitigate rate limiting. The real application will fire get_top_tracks 
+for i in range(10): # This fires only twice to mitigate rate limiting. The real application will fire get_top_tracks 
     new_tracks = get_top_tracks(looper_offset)
     track_list.extend(new_tracks)
     looper_offset += 50
-
-genre_test = sp.artist('spotify:artist:4I6ModFVv3BWDsjMqzYcMc')
-print(genre_test['genres'])
 
 # The user interface of the final product will make use of buttons and multi-select boxes, 
 # so I am choosing to not spend time working on input validation for this version since it won't be engaged in the final product.
@@ -441,7 +435,7 @@ if new_or_familiar == '1':
     track_list = get_audio_features(track_list)
 if new_or_familiar == '2':
     # Fires get_new_tracks to rewrite top_tracks, using the current top tracks for its operations
-    get_new_tracks(track_list)
+    track_list = get_new_tracks(track_list)
     track_list = get_audio_features(track_list)
 
 # Genres are properties of artists, not tracks. 
