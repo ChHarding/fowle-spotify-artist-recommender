@@ -254,13 +254,45 @@ def set_artist_genres(track_list):
     Parameters: track_list
     Returns: track_list, updated with genres'''
 
+    # Get a list of all artist uris
+    artist_uris = []
     for track in track_list:
-        # for if there are multiple artists on one track
-        for uri in track['artist_uris']:
-            genres = sp.artist(uri)['genres']
-            # deconstruct nested lists for each track object
-            for genre in genres:
-                track['genres'].append(genre)
+        for artist_uri in track['artist_uris']:
+            artist_uris.append(artist_uri)
+    
+    # Calculate number of loops
+    iterations = len(artist_uris) // 50 # sp.artists has an upper limit of 50 track ids
+    remainder = len(artist_uris) % 50
+    # Adds 1 to the number of iterations if the length of track_list is not perfectly divisible by 50
+    if remainder > 0:
+        iterations += 1
+    offset = 0
+    for i in range(iterations):
+
+        # Instantiate dictionary of artists, returned from sp.artists()
+        artists_list = {}
+
+        # Get results for 50 at a time, or the remainder if the length of artist URIs is not perfectly divisible by 50
+        try:
+            artists_list = sp.artists(artist_uris[offset:offset+50])
+        except:
+            artists_list = sp.artists(artist_uris[offset:])
+
+        # For each artist...
+        for artist in artists_list['artists']:
+            # Compare to each track object in track_list...
+            for track_object in track_list:
+                # Then further look for a match in the list of artist_uris...
+                for track_object_uri in track_object['artist_uris']:
+                    if artist['uri'] == track_object_uri:
+                        # Add the genres from sp.artists() artist data to the track_list object genres property
+                        track_object['genres'].extend(artist['genres'])
+                        # Remove duplicate genres, for if one artist appears in multiple tracks in track_list
+                        track_object_genres_set = set(track_object['genres'])
+                        track_object['genres'] = list(track_object_genres_set)
+        
+        # Increment the loop
+        offset += 50
 
     return track_list
 
@@ -397,6 +429,9 @@ for i in range(2): # This fires only twice to mitigate rate limiting. The real a
     new_tracks = get_top_tracks(looper_offset)
     track_list.extend(new_tracks)
     looper_offset += 50
+
+genre_test = sp.artist('spotify:artist:4I6ModFVv3BWDsjMqzYcMc')
+print(genre_test['genres'])
 
 # The user interface of the final product will make use of buttons and multi-select boxes, 
 # so I am choosing to not spend time working on input validation for this version since it won't be engaged in the final product.
