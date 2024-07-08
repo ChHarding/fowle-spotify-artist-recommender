@@ -2,6 +2,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, url_for, session, redirect
 import random
+import time
 import os
 from dotenv import load_dotenv
 
@@ -60,7 +61,7 @@ track_list = []
 
 
 
-def get_top_tracks(offset):
+def get_top_tracks(offset, sp):
     '''Gets the current signed in users' top tracks. Fires after the user signs in.
     Parameters: offset - the starting value for getting top tracks. E.g, an offset of 50 gets the 50th-100th top tracks.'''
     top_tracks = sp.current_user_top_tracks(limit=50, time_range='long_term', offset=offset)
@@ -92,7 +93,7 @@ def get_top_tracks(offset):
 
 
 
-def get_audio_features(track_list):
+def get_audio_features(track_list, sp):
     '''Gets the audio features of each track in track_list.
     Modifies missing_audio_features flag to True if any or all audio features are missing on the track.
     Parameters: track_list - the current list of all tracks.
@@ -155,7 +156,7 @@ def get_audio_features(track_list):
 
 
 
-def set_novel_track_list(ids):
+def set_novel_track_list(ids, sp):
     '''Gets tracks details from get_new_tracks and returns a list of new track objects.
     Parameters: ids - a list of track IDs.
     Returns: a list of new track objects to .extend() into track_list'''
@@ -189,7 +190,7 @@ def set_novel_track_list(ids):
 
 
 
-def get_new_tracks(track_list):
+def get_new_tracks(track_list, sp):
     '''Get unfamiliar (new, novel) track IDs using the sp.recommendations() method on the current track_list of a user's top tracks.
     Calls set_novel_track_list() to get track details from track IDs.
     Parameters: track_list
@@ -246,7 +247,7 @@ def get_new_tracks(track_list):
 
     
 
-def set_artist_genres(track_list):
+def set_artist_genres(track_list, sp):
     '''Sets the genres for each track.
     Genres are properties of artists, not tracks. 
     Thus, this pulls the genres of the artists of each track and appends those genres to the genres property of each track object.
@@ -316,7 +317,7 @@ def create_genres_dict(track_list):
 
 
 
-def genre_score_deduction(genre_input):
+def genre_score_deduction(genre_input, genres_dict):
     '''Deduces each track object's score if the user's genre input does not match any genre of each track.
     Parameters: genre_input => the genres the user selected in the main application
     Returns: None => score adjustments happen in-place'''
@@ -380,7 +381,7 @@ def get_final_playlist(track_list):
 
 
 
-def create_new_playlist(playlist):
+def create_new_playlist(playlist, sp):
     '''Attempts to create a new public user playlist in Spotify with the 30 tracks recommended in this program.
     Parameter: playlist => List of the top 30 tracks
     Returns: None, end of the process'''
@@ -448,7 +449,24 @@ def redirect_page():
 
 @app.route("/new-or-familiar")
 def new_or_familiar_page():
+    try:
+        token_info = get_token()
+    except:
+        redirect(url_for('home_page', _external=False))
+    sp = spotipy.Spotify(auth=token_info['access_token'])
     return "New or familiar?"
+
+def get_token():
+    '''Gets token information or refreshes the token if it has expired.'''
+    token_info = session.get(TOKEN_INFO, None)
+    if not token_info:
+        raise "exception"
+    now = int(time.time())
+    is_expired = token_info['expires_at'] - now < 60
+    if is_expired:
+        sp_oauth = create_spotify_oauth()
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+    return token_info
 
 @app.route("/genres")
 def genres_page():
