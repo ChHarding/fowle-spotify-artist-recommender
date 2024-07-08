@@ -1,6 +1,6 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from flask import Flask, request, url_for, session, redirect
+from flask import Flask, request, url_for, session, redirect, render_template
 import random
 import time
 import os
@@ -432,11 +432,17 @@ def create_spotify_oauth():
         scope = "user-top-read playlist-modify-public"
     )
 
+
+
+
 @app.route("/")
 def home_page():
     sp_oauth = create_spotify_oauth()
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
+
+
+
 
 @app.route("/redirect")
 def redirect_page():
@@ -447,14 +453,37 @@ def redirect_page():
     session[TOKEN_INFO] = token_info
     return redirect(url_for("new_or_familiar_page", _external=True))
 
+
+
+
 @app.route("/new-or-familiar")
 def new_or_familiar_page():
+
+    # Try to validate or refresh the access token
     try:
         token_info = get_token()
     except:
         redirect(url_for('home_page', _external=False))
+
+    # Create a reference to the Spotipy library with the access token
     sp = spotipy.Spotify(auth=token_info['access_token'])
-    return "New or familiar?"
+
+    # Instantiante initial track_list
+    track_list = []
+
+    # Looper offset for iterating over user's top tracks
+    looper_offset = 0
+
+    # Get top 500 tracks
+    for i in range(10):
+        new_tracks = get_top_tracks(looper_offset, sp)
+        track_list.extend(new_tracks)
+        looper_offset += 50
+
+    return render_template("base.html")
+
+
+
 
 def get_token():
     '''Gets token information or refreshes the token if it has expired.'''
@@ -468,17 +497,29 @@ def get_token():
         token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
     return token_info
 
+
+
+
 @app.route("/genres")
 def genres_page():
     return "Genres!"
+
+
+
 
 @app.route("/features")
 def features_page():
     return "Features!"
 
+
+
+
 @app.route("/playlist")
 def playlist_page():
     return "Playlist!"
+
+
+
 
 @app.route("/create-playlist")
 def create_playlist_page():
