@@ -7,5 +7,15 @@
         <div class="buttonSeparator"></div>
         <a href="{{url_for('genres_page')}}" class="buttonText"><div class="newOrFamiliarButton">Familiar</div></a>
     </div>
+    <div class="newOrFamiliarButtonsContainer">
+        <form method="post" class="NoFButtonForm">
+            <input type="hidden" name="NoFButton" value="new">
+            <input type="submit" value="New button">
+        </form>
+        <form method="post" class="NoFButtonForm">
+            <input type="hidden" name="NoFButton" value="familiar">
+            <input type="submit" value="Familiar button">
+        </form>
+    </div>
 </div>
 {% endblock %}

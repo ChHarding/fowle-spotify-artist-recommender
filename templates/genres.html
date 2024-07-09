@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bodyContent">
+    <h2 class="appPrompt">Select which genre(s) you'd like to listen to</h2>
+    <p>{% track_list[0]["track_name"] %}</p>
+    <p>{{new_or_familiar}}</p>
+</div>
+{% endblock %}

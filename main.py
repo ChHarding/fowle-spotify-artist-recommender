@@ -14,7 +14,7 @@ load_dotenv()
 
 
 # [---------------------------------------------------------------]
-# [--------------------------FLASK PAGES--------------------------]
+# [-------------------------AUTHORIZATION-------------------------]
 # [---------------------------------------------------------------]
 
 
@@ -42,6 +42,31 @@ def create_spotify_oauth():
 
 
 
+def get_token():
+    '''Gets token information or refreshes the token if it has expired.'''
+    token_info = session.get(TOKEN_INFO, None)
+    if not token_info:
+        raise "exception"
+    now = int(time.time())
+    is_expired = token_info['expires_at'] - now < 60
+    if is_expired:
+        sp_oauth = create_spotify_oauth()
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+    return token_info
+
+
+
+
+
+# [---------------------------------------------------------------]
+# [--------------------------FLASK PAGES--------------------------]
+# [---------------------------------------------------------------]
+
+
+
+
+
+
 @app.route("/")
 def home_page():
     sp_oauth = create_spotify_oauth()
@@ -63,7 +88,7 @@ def redirect_page():
 
 
 
-@app.route("/new-or-familiar")
+@app.route("/new-or-familiar", methods=["POST", "GET"])
 def new_or_familiar_page():
 
     # Try to validate or refresh the access token
@@ -72,44 +97,37 @@ def new_or_familiar_page():
     except:
         redirect(url_for('home_page', _external=False))
 
-    # Create a reference to the Spotipy library with the access token
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-
     # Instantiante initial track_list
     track_list = []
 
-    # Looper offset for iterating over user's top tracks
-    looper_offset = 0
+    # Create a reference to the Spotipy library with the access token
+    sp = spotipy.Spotify(auth=token_info['access_token'])
 
-    # Get top 500 tracks
-    for i in range(10):
-        new_tracks = helpers.get_top_tracks(looper_offset, sp)
-        track_list.extend(new_tracks)
-        looper_offset += 50
+    if request.method == "GET":
 
-    return render_template("base.html")
+        # Looper offset for iterating over user's top tracks
+        looper_offset = 0
 
+        # Get top 500 tracks
+        for i in range(10):
+            new_tracks = helpers.get_top_tracks(looper_offset, sp)
+            track_list.extend(new_tracks)
+            looper_offset += 50
 
-
-
-def get_token():
-    '''Gets token information or refreshes the token if it has expired.'''
-    token_info = session.get(TOKEN_INFO, None)
-    if not token_info:
-        raise "exception"
-    now = int(time.time())
-    is_expired = token_info['expires_at'] - now < 60
-    if is_expired:
-        sp_oauth = create_spotify_oauth()
-        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-    return token_info
+        return render_template("newOrFamiliar.html")
+    
+    if request.method == "POST":
+        # Get the value of the button selected
+        new_or_familiar = request.form["NoFButton"]
+        return redirect(url_for("genres_page", track_list=track_list, sp=sp, new_or_familiar=new_or_familiar))
 
 
 
 
-@app.route("/genres")
-def genres_page():
-    return "Genres!"
+
+@app.route("/genres/<track_list>/<sp>/<new_or_familiar>")
+def genres_page(track_list, sp, new_or_familiar):
+    return render_template("genres.html", track_list=track_list, new_or_familiar=new_or_familiar)
 
 
 

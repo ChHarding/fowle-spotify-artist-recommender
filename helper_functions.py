@@ -262,9 +262,9 @@ def create_genres_dict(track_list):
 
 
 
-def genre_score_deduction(genre_input, genres_dict):
+def genre_score_deduction(genre_input, genres_dict, track_list):
     '''Deduces each track object's score if the user's genre input does not match any genre of each track.
-    Parameters: genre_input => the genres the user selected in the main application
+    Parameters: genre_input => the genres the user selected in the main application; genres_dict => the genres dictionary; track_list
     Returns: None => score adjustments happen in-place'''
 
     input_list = genre_input.split(' ') # Turns user string input of genre keys into a list
@@ -279,13 +279,14 @@ def genre_score_deduction(genre_input, genres_dict):
             continue # ...do nothing (retain a higher score)
         else:
             track['score'] -= 20 # ...if there is NOT a match, deduce 20 points from the score
+    return track_list
 
 
 
 
-def feature_score_deduction(input_value, feature):
+def feature_score_deduction(input_value, feature, track_list):
     '''Deduce each track's score based on the difference between each audio_feature and the audio_feature score provided by the user.
-    Parameters: input_value => the value the user provided for the audio_feature. feature => the name of the feature, e.g., 'acousticness'.
+    Parameters: input_value => the value the user provided for the audio_feature; feature => the name of the feature, e.g., 'acousticness'; track_list
     Returns: None => score adjustments happen in-place'''
 
     for track in track_list:
@@ -297,6 +298,7 @@ def feature_score_deduction(input_value, feature):
         else: # If there is a difference in score and user input
             dissimilarity_percentage = value_difference / 100 # Get a "dissimilarity percentage"...
             track['score'] -= 12 * dissimilarity_percentage # Normalize the dissimilarity to a maximum value of 12 points to deduce, then subtract those points from the track's score
+    return track_list
         
 
 
