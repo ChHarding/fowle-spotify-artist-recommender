@@ -11,13 +11,7 @@
         <div class="headerContainer">
             <h1 class="appTitle">Spotify Playlist Generator</h1>
         </div>
-        <div class="bodyContent">
-            <h2 class="appPrompt">Would you like to listen to new or familiar music?</h2>
-            <div class="newOrFamiliarButtonsContainer">
-                <a href="{{url_for('genres_page')}}" class="buttonText"><div class="newOrFamiliarButton">New</div></a>
-                <div class="buttonSeparator"></div>
-                <a href="{{url_for('genres_page')}}" class="buttonText"><div class="newOrFamiliarButton">Familiar</div></a>
-            </div>
-        </div>
+        {% block content %}
+        {% endblock %}
     </body>
 </html>
