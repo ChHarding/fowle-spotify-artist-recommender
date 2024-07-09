@@ -244,7 +244,7 @@ def set_artist_genres(track_list, sp):
 
 
 
-def create_genres_dict(track_list):
+def create_genres_list(track_list):
     '''Creates a dictionary containing all genres. Each genre is paired with an indexed key for user entry.
     Parameters: track_list
     Returns: temp_genres_dict (List)'''
@@ -256,8 +256,8 @@ def create_genres_dict(track_list):
             temp_genres_list.append(genre)
     temp_genres_set = set(temp_genres_list) # set() to remove duplicates
     # Turn the genres list into a dictionary where the key for each value is its index. This is necessary for the user input (see genre_score_deduction)
-    temp_genres_dict = {index: item for index, item in enumerate(temp_genres_set)}
-    return temp_genres_dict
+    genres_list = list(temp_genres_set)
+    return genres_list
 
 
 
@@ -267,12 +267,6 @@ def genre_score_deduction(genre_input, genres_dict, track_list):
     Parameters: genre_input => the genres the user selected in the main application; genres_dict => the genres dictionary; track_list
     Returns: None => score adjustments happen in-place'''
 
-    input_list = genre_input.split(' ') # Turns user string input of genre keys into a list
-    # This compares the user input to the KEYS of genres_dict to retrieve the values. 
-    # I opted to use this method so that the user simply needed to enter the numeric key instead of type out the 
-    # genre name, which can get long and complicated and introduce more room for error.
-    input_genres_list = [genres_dict[int(key)] for key in input_list] 
-    # For each track...
     for track in track_list:
         # If any genre of that track matches what the user put in...
         if any(genre in track['genres'] for genre in input_genres_list):

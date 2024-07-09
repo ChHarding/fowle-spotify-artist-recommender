@@ -63,7 +63,7 @@ def get_token():
 # [---------------------------------------------------------------]
 
 
-
+track_list = []
 
 
 
@@ -97,37 +97,51 @@ def new_or_familiar_page():
     except:
         redirect(url_for('home_page', _external=False))
 
-    # Instantiante initial track_list
-    track_list = []
+    if request.method == "POST":
+        # Get the value of the button selected
+        new_or_familiar = request.form["NoFButton"]
+        return redirect(url_for('genres_page', new_or_familiar = new_or_familiar))
 
     # Create a reference to the Spotipy library with the access token
     sp = spotipy.Spotify(auth=token_info['access_token'])
 
-    if request.method == "GET":
+    # Looper offset for iterating over user's top tracks
+    looper_offset = 0
 
-        # Looper offset for iterating over user's top tracks
-        looper_offset = 0
+    # Get top 500 tracks
+    for i in range(10):
+        new_tracks = helpers.get_top_tracks(looper_offset, sp)
+        track_list.extend(new_tracks)
+        looper_offset += 50
 
-        # Get top 500 tracks
-        for i in range(10):
-            new_tracks = helpers.get_top_tracks(looper_offset, sp)
-            track_list.extend(new_tracks)
-            looper_offset += 50
+    return render_template("newOrFamiliar.html")
 
-        return render_template("newOrFamiliar.html")
-    
+
+
+
+
+
+@app.route("/genres/<new_or_familiar>", methods=["POST", "GET"])
+def genres_page(new_or_familiar):
     if request.method == "POST":
-        # Get the value of the button selected
-        new_or_familiar = request.form["NoFButton"]
-        return redirect(url_for("genres_page", track_list=track_list, sp=sp, new_or_familiar=new_or_familiar))
+        global track_list
+        user_input = request.form.getlist('genres')
+        track_list = helpers.genre_score_deduction(user_input, genres_list, track_list) # update genre_score_deduction
+        return redirect(url_for("features_page"))
+     
+    if new_or_familiar == 'new':
+        # Reset track_list to new tracks, store in global track_list
+        global track_list
 
+    token_info = get_token()
+    sp = spotipy.Spotify(auth=token_info['access_token'])
+    global track_list
+    track_list = helpers.set_artist_genres(track_list, sp)
+    genres_list = helpers.create_genres_list(track_list)
+    return render_template("genres.html", new_or_familiar=new_or_familiar, genres_list=genres_list)
 
-
-
-
-@app.route("/genres/<track_list>/<sp>/<new_or_familiar>")
-def genres_page(track_list, sp, new_or_familiar):
-    return render_template("genres.html", track_list=track_list, new_or_familiar=new_or_familiar)
+    
+   
 
 
 
