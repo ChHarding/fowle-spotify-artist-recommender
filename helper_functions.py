@@ -325,9 +325,6 @@ def get_final_playlist(track_list):
     # If the playlist was put in order from best to worst, it would get less enjoyable to listen to as the user progresses through it.
     random.shuffle(top_30_tracks)
 
-    # Playlist output
-    for idx, track in enumerate(top_30_tracks):
-        print(f"{idx + 1}: {track['track_name']} - {', '.join(track['artists'])}\t Match: {round(track['score'], 2)}%")
     return top_30_tracks
 
 

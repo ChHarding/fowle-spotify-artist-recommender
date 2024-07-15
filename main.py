@@ -169,6 +169,7 @@ def features_page():
 
         track_list_features_deduced = helpers.feature_score_deduction(user_features, session.get("track_list"))
         session.update({'track_list': track_list_features_deduced})
+        return redirect(url_for("playlist_page"))
     
     track_list_with_audio_features = helpers.get_audio_features(session.get("track_list"), session.get("sp"))
     session.update({'track_list': track_list_with_audio_features})
@@ -179,7 +180,8 @@ def features_page():
 
 @app.route("/playlist")
 def playlist_page():
-    return "Playlist!"
+    top_30_tracks = helpers.get_final_playlist(session.get("track_list"))
+    return render_template("finalPlaylist.html", top_30_tracks=top_30_tracks)
 
 
 

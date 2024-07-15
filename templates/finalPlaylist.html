@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bodyContent">
+    {% for track in top_30_tracks %}
+        <div class="finalPlaylistTrackContainer">
+            <p class="trackName">{{ track['track_name'] }}</p>
+            <div class="artistsContainer">
+                {% for artist in track['artists'] %}
+                    <p class="artistName">{{ artist }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
