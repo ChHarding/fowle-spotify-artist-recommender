@@ -157,8 +157,21 @@ def genres_page(new_or_familiar):
 @app.route("/features", methods=["POST", "GET"])
 def features_page():
     if request.method == "POST":
-        x = 1
+        acousticness = request.form.get('acousticness')
+        danceability = request.form.get('danceability')
+        energy = request.form.get('energy')
+        instrumentalness = request.form.get('instrumentalness')
+        liveness = request.form.get('liveness')
+        speechiness = request.form.get('speechiness')
+        valence = request.form.get('valence')
+
+        user_features = [acousticness, danceability, energy, instrumentalness, liveness, speechiness, valence]
+
+        track_list_acousticness_deduced = helpers.feature_score_deduction(user_features, session.get("track_list"))
+    
     track_list_with_audio_features = helpers.get_audio_features(session.get("track_list"), session.get("sp"))
+    session.update({'track_list': track_list_with_audio_features})
+    return render_template("features.html")
 
 
 
