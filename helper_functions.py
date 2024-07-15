@@ -278,20 +278,31 @@ def genre_score_deduction(genre_input, track_list):
 
 
 
-def feature_score_deduction(input_value, feature, track_list):
+def feature_score_deduction(input_values, track_list):
     '''Deduce each track's score based on the difference between each audio_feature and the audio_feature score provided by the user.
     Parameters: input_value => the value the user provided for the audio_feature; feature => the name of the feature, e.g., 'acousticness'; track_list
-    Returns: None => score adjustments happen in-place'''
+    Returns: None => score adjustments happen in-place'''   
 
+    # For each track...
     for track in track_list:
-        track_feature_value = track[feature]
-        # This gets a positive value for the difference between what the user submitted and the value of the feature on the track
-        value_difference = abs(track_feature_value - input_value)
-        if value_difference == 0: # If there is a perfect match...
-            continue # ...do nothing (deduce 0 points)
-        else: # If there is a difference in score and user input
-            dissimilarity_percentage = value_difference / 100 # Get a "dissimilarity percentage"...
-            track['score'] -= 12 * dissimilarity_percentage # Normalize the dissimilarity to a maximum value of 12 points to deduce, then subtract those points from the track's score
+        # Get one feature and user input value from input values...
+        for feature_name, user_score in input_values.items():
+            # Then find a match in the track properties...
+            for track_property_name, track_feature_value in track.items():
+                # When the match is found...
+                if feature_name == track_property_name:
+                    # Validate that the track feature has a value...
+                    if track_feature_value != None:
+                        # Then convert the user score to a float and deduce points from the track['score'] as necessary
+                        user_score_float = float(user_score)
+                        track_feature_value_normalized = track_feature_value * 100
+                        value_difference = abs(track_feature_value_normalized - user_score_float)
+                        if value_difference == 0:
+                            continue
+                        else:
+                            dissimilarity_percentage = value_difference / 100
+                            track['score'] -= 10 * dissimilarity_percentage
+
     return track_list
         
 

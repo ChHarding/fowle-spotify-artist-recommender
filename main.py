@@ -157,17 +157,18 @@ def genres_page(new_or_familiar):
 @app.route("/features", methods=["POST", "GET"])
 def features_page():
     if request.method == "POST":
-        acousticness = request.form.get('acousticness')
-        danceability = request.form.get('danceability')
-        energy = request.form.get('energy')
-        instrumentalness = request.form.get('instrumentalness')
-        liveness = request.form.get('liveness')
-        speechiness = request.form.get('speechiness')
-        valence = request.form.get('valence')
+        user_features = {}
 
-        user_features = [acousticness, danceability, energy, instrumentalness, liveness, speechiness, valence]
+        user_features['acousticness'] = request.form.get('acousticness')
+        user_features['danceability'] = request.form.get('danceability')
+        user_features['energy'] = request.form.get('energy')
+        user_features['instrumentalness'] = request.form.get('instrumentalness')
+        user_features['liveness'] = request.form.get('liveness')
+        user_features['speechiness'] = request.form.get('speechiness')
+        user_features['valence'] = request.form.get('valence')
 
-        track_list_acousticness_deduced = helpers.feature_score_deduction(user_features, session.get("track_list"))
+        track_list_features_deduced = helpers.feature_score_deduction(user_features, session.get("track_list"))
+        session.update({'track_list': track_list_features_deduced})
     
     track_list_with_audio_features = helpers.get_audio_features(session.get("track_list"), session.get("sp"))
     session.update({'track_list': track_list_with_audio_features})
