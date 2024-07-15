@@ -262,14 +262,14 @@ def create_genres_list(track_list):
 
 
 
-def genre_score_deduction(genre_input, genres_dict, track_list):
+def genre_score_deduction(genre_input, track_list):
     '''Deduces each track object's score if the user's genre input does not match any genre of each track.
     Parameters: genre_input => the genres the user selected in the main application; genres_dict => the genres dictionary; track_list
     Returns: None => score adjustments happen in-place'''
 
     for track in track_list:
         # If any genre of that track matches what the user put in...
-        if any(genre in track['genres'] for genre in input_genres_list):
+        if any(genre in track['genres'] for genre in genre_input):
             continue # ...do nothing (retain a higher score)
         else:
             track['score'] -= 20 # ...if there is NOT a match, deduce 20 points from the score

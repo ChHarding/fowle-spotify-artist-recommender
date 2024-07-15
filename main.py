@@ -1,6 +1,7 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, url_for, session, redirect, render_template
+from flask_session import Session
 import time
 import os
 from dotenv import load_dotenv
@@ -26,8 +27,11 @@ app = Flask(__name__)
 
 app.secret_key = "lk3j24h25iojflasdjk9fjio"
 app.config['SESSION_COOKIE_NAME'] = "Playlist Maker Cookie"
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = 'asdflksdfljkwefhbn2354g'
 TOKEN_INFO = "token_info"
 
+Session(app)
 
 
 
@@ -63,7 +67,7 @@ def get_token():
 # [---------------------------------------------------------------]
 
 
-track_list = []
+
 
 
 
@@ -104,6 +108,9 @@ def new_or_familiar_page():
 
     # Create a reference to the Spotipy library with the access token
     sp = spotipy.Spotify(auth=token_info['access_token'])
+    session['sp'] = sp
+
+    track_list = []
 
     # Looper offset for iterating over user's top tracks
     looper_offset = 0
@@ -114,6 +121,7 @@ def new_or_familiar_page():
         track_list.extend(new_tracks)
         looper_offset += 50
 
+    session['track_list'] = track_list
     return render_template("newOrFamiliar.html")
 
 
@@ -124,20 +132,20 @@ def new_or_familiar_page():
 @app.route("/genres/<new_or_familiar>", methods=["POST", "GET"])
 def genres_page(new_or_familiar):
     if request.method == "POST":
-        global track_list
         user_input = request.form.getlist('genres')
-        track_list = helpers.genre_score_deduction(user_input, genres_list, track_list) # update genre_score_deduction
+        track_list_updated_score_genres = helpers.genre_score_deduction(user_input, session.get('track_list')) # update genre_score_deduction
+        session.update({'track_list': track_list_updated_score_genres})
         return redirect(url_for("features_page"))
      
     if new_or_familiar == 'new':
         # Reset track_list to new tracks, store in global track_list
-        global track_list
+        x = 1
 
-    token_info = get_token()
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-    global track_list
-    track_list = helpers.set_artist_genres(track_list, sp)
-    genres_list = helpers.create_genres_list(track_list)
+    # token_info = get_token()
+    # sp = spotipy.Spotify(auth=token_info['access_token'])
+    track_list_with_genres = helpers.set_artist_genres(session.get("track_list"), session.get("sp"))
+    session.update({"track_list": track_list_with_genres})
+    genres_list = helpers.create_genres_list(track_list_with_genres)
     return render_template("genres.html", new_or_familiar=new_or_familiar, genres_list=genres_list)
 
     
@@ -146,9 +154,11 @@ def genres_page(new_or_familiar):
 
 
 
-@app.route("/features")
+@app.route("/features", methods=["POST", "GET"])
 def features_page():
-    return "Features!"
+    if request.method == "POST":
+        x = 1
+    track_list_with_audio_features = helpers.get_audio_features(session.get("track_list"), session.get("sp"))
 
 
 
