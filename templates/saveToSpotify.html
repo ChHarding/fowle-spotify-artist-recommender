@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bodyContent">
+    <div class="namePlaylistContainer">
+        <form method="post" class="namePlaylistForm">
+            <input type="text" placeholder="Name your playlist" name="playlist_name">
+            <input type="submit" value="Save to Spotify">
+        </form>
+    </div>
+    <div class="successMessageContainer">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="successMessage">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}

@@ -330,18 +330,16 @@ def get_final_playlist(track_list):
 
 
 
-def create_new_playlist(playlist, sp):
+def create_new_playlist(playlist, sp, playlist_name):
     '''Attempts to create a new public user playlist in Spotify with the 30 tracks recommended in this program.
     Parameter: playlist => List of the top 30 tracks
     Returns: None, end of the process'''
 
     current_user = sp.current_user()
     user_id = current_user['id']
-    # Get a name for the new playlist
-    playlist_name_input = input("What would you like to name your new playlist?: ")
     # Try to create a new playlist with the given name
     try:
-        new_playlist = sp.user_playlist_create(user=user_id, name=playlist_name_input) # Create the new empty playlist
+        new_playlist = sp.user_playlist_create(user=user_id, name=playlist_name) # Create the new empty playlist
         new_playlist_id = new_playlist['id'] # Get the new playlist's ID for later populating it
         # Create a new simple list for collecting track URIs, which are needed to populate the playlist
         playlist_uris = [] 
@@ -349,9 +347,9 @@ def create_new_playlist(playlist, sp):
             playlist_uris.append(track['track_uri'])
         # Add the top tracks to the new playlist
         sp.user_playlist_add_tracks(user=user_id, playlist_id=new_playlist_id, tracks=playlist_uris)
-        print('All done! Enjoy your new playlist in Spotify!') # Complete!
+        return True
     except: 
-        print('There was an error creating the new playlist in Spotify!') # Catch-all if there are any errors in the playlist create/populate process
+        return False
 
 
 
