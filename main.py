@@ -133,18 +133,24 @@ def new_or_familiar_page():
 def genres_page(new_or_familiar):
     if request.method == "POST":
         user_input = request.form.getlist('genres')
-        track_list_updated_score_genres = helpers.genre_score_deduction(user_input, session.get('track_list')) # update genre_score_deduction
+        track_list_updated_score_genres = helpers.genre_score_deduction(user_input, session.get('track_list'))
         session.update({'track_list': track_list_updated_score_genres})
         return redirect(url_for("features_page"))
      
     if new_or_familiar == 'new':
         # Reset track_list to new tracks, store in global track_list
-        x = 1
+        novel_track_list = helpers.get_new_tracks(session.get("track_list"), session.get("sp"))
+        session.update({'track_list': novel_track_list})
+        # Set artist genres in track_list
+        track_list_with_genres = helpers.set_artist_genres(session.get("track_list"), session.get("sp"))
+        session.update({"track_list": track_list_with_genres})
 
-    # token_info = get_token()
-    # sp = spotipy.Spotify(auth=token_info['access_token'])
-    track_list_with_genres = helpers.set_artist_genres(session.get("track_list"), session.get("sp"))
-    session.update({"track_list": track_list_with_genres})
+    if new_or_familiar == 'familiar':
+        # Retain original track_list and set artist genres
+        track_list_with_genres = helpers.set_artist_genres(session.get("track_list"), session.get("sp"))
+        session.update({"track_list": track_list_with_genres})
+
+    # Create genres list for genres_page rendering    
     genres_list = helpers.create_genres_list(track_list_with_genres)
     return render_template("genres.html", new_or_familiar=new_or_familiar, genres_list=genres_list)
 

@@ -181,10 +181,10 @@ def get_new_tracks(track_list, sp):
     # For each group of 50 tracks, get the track details and .extend() into track_list
     for i in range(iterations):
         try:
-            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:offset+50])
+            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:offset+50], sp)
             track_list.extend(new_tracks)
         except:
-            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:])
+            new_tracks = set_novel_track_list(cleaned_new_track_ids[offset:], sp)
             track_list.extend(new_tracks)
         offset += 50
     return track_list
