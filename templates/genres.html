@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="bodyContent">
-    <form method="post" class="genresList">
-        {% for genre in genres_list %}
-            <input type="checkbox" id="{{genre}}" name="genres" value="{{genre}}" class="genreOption" />
-            <label for="{{genre}}">{{genre}}</label>
-        {% endfor %}
-        <input type="submit" value="Submit">
-    </form> 
+    <div class="genresBody">
+        <form method="post" class="genresForm">
+            <h2 class="appPrompt">Select all genres you'd like to listen to</h2>
+            <div class="genresList">
+                {% for genre in genres_list %}
+                    <input type="checkbox" id="{{genre}}" name="genres" value="{{genre}}" class="genreOption" />
+                    <label for="{{genre}}" class="genreLabel">{{genre}}</label>
+                {% endfor %}
+            </div>
+            <input type="submit" value="Submit" class="uiButton genreSubmitButton">
+        </form> 
+    </div>
 </div>
 {% endblock %}
