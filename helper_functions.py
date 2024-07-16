@@ -304,11 +304,21 @@ def feature_score_deduction(input_values, track_list):
                             track['score'] -= 10 * dissimilarity_percentage
 
     return track_list
-        
 
 
 
-def get_final_playlist(track_list):
+
+def get_album_art(top_30_tracks, sp):
+    for track in top_30_tracks:
+        album = sp.track(track["track_id"])
+        track["album_art"] = album['album']['images'][0]['url']
+
+    return top_30_tracks
+
+
+
+
+def get_final_playlist(track_list, sp):
     '''Gets the final playlist displays it in the UI.
     Parameters: track_list
     Returns: top_30_tracks => List of tracks with the highest scores'''
@@ -321,11 +331,13 @@ def get_final_playlist(track_list):
 
     top_30_tracks = sorted_track_list[:30] # Returns the first 30 in the list, i.e., the 30 tracks with the highest scores
 
+    top_30_tracks_with_album_art = get_album_art(top_30_tracks, sp)
+
     # I'm shuffling the top 30 here to make the playlist more engaging to listen to. 
     # If the playlist was put in order from best to worst, it would get less enjoyable to listen to as the user progresses through it.
     random.shuffle(top_30_tracks)
 
-    return top_30_tracks
+    return top_30_tracks_with_album_art
 
 
 

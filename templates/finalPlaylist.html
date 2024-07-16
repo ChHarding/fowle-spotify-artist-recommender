@@ -3,6 +3,7 @@
 <div class="bodyContent">
     {% for track in top_30_tracks %}
         <div class="finalPlaylistTrackContainer">
+            <img src="{{ track['album_art'] }}" class="albumArt" />
             <p class="trackName">{{ track['track_name'] }}</p>
             <div class="artistsContainer">
                 {% for artist in track['artists'] %}

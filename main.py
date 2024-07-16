@@ -190,7 +190,7 @@ def playlist_page():
         # Render create playlist template and pass the final playlist
         return redirect(url_for("create_playlist_page"))
     
-    top_30_tracks = helpers.get_final_playlist(session.get("track_list"))
+    top_30_tracks = helpers.get_final_playlist(session.get("track_list"), session.get("sp"))
     session["top_30_tracks"] = top_30_tracks # Save here for passing to /create_playlist
     return render_template("finalPlaylist.html", top_30_tracks=top_30_tracks)
 
