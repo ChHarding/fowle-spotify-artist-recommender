@@ -1,20 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="bodyContent">
-    <div class="namePlaylistContainer">
-        <form method="post" class="namePlaylistForm">
-            <input type="text" placeholder="Name your playlist" name="playlist_name">
-            <input type="submit" value="Save to Spotify">
-        </form>
+    <div class="savePlaylistBodyContainer" id="savePlaylistBodyContainer">
+        <h3 class="appPrompt">Enter a name for your new playlist</h3>
+        <div class="namePlaylistContainer">
+            <div class="playlistImageContainer">
+                {% for image in top_4_tracks_images %}
+                    <img src="{{ image }}" class="coverArtFinalExport" />
+                {% endfor %}
+            </div>
+            <form method="post" class="namePlaylistForm">
+                <input type="text" name="playlist_name" class="namePlaylistInput" value="My Playlist {{ today }}">
+                <input type="submit" value="Save to Spotify" class="uiButton" onclick="hideContentOnSuccess()">
+            </form>
+        </div>
     </div>
     <div class="successMessageContainer">
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
-                    <p class="successMessage">{{ message }}</p>
+                    <h2 class="appPrompt">{{ message }}</h2>
                 {% endfor %}
             {% endif %}
         {% endwith %}
     </div>
+    <script>
+        function hideContentOnSuccess() {
+            var pageContent = document.getElementById("savePlaylistBodyContainer");
+            pageContent.style.display = "none";
+        }
+    </script>
 </div>
 {% endblock %}

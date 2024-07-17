@@ -1,21 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="bodyContent">
-    {% for track in top_30_tracks %}
-        <div class="finalPlaylistTrackContainer">
-            <img src="{{ track['album_art'] }}" class="albumArt" />
-            <p class="trackName">{{ track['track_name'] }}</p>
-            <div class="artistsContainer">
-                {% for artist in track['artists'] %}
-                    <p class="artistName">{{ artist }}</p>
-                {% endfor %}
+    <div class="finalPlaylistContainer">
+        <div class="playlistContainer">
+            <h2 class="appPrompt">Here is your final playlist</h2>
+            <div class="playlistHeadersContainer">
+                <p class="trackTitle">Title</p>
+                <p class="artistHeader">Artist</p>
+                <p class="scoreHeader">Match %</p>
             </div>
+            {% for track in top_30_tracks %}
+                <div class="finalPlaylistTrackContainer">
+                    <img src="{{ track['album_art'] }}" class="albumArt" />
+                    <div class="titleContainer">
+                        <p class="trackName">{{ track['track_name'] }}</p>
+                    </div>
+                    <div class="artistsContainer">
+                        {% for artist in track['artists'] %}
+                            <p class="artistName">{{ artist }}</p>
+                            {% if track['artists']|length > 1 %}
+                                {% if artist != track['artists'][-1] %}
+                                    <p class="comma">,&nbsp</p>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="matchPercent">{{ track['score']|round(2) }} %</div>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-    <div class="saveToSpotifyButtonContainer">
-        <form method="post" class="saveToSpotifyButtonForm">
-            <input type="submit" value="Save to Spotify">
-        </form>
+        <div class="saveToSpotifyButtonContainer">
+            <form method="post" class="saveToSpotifyButtonForm">
+                <input type="submit" value="Save to Spotify" class="uiButton">
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

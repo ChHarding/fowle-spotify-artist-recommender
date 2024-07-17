@@ -3,6 +3,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, url_for, session, redirect, render_template, flash
 from flask_session import Session
 import time
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 import helper_functions as helpers
@@ -187,6 +188,15 @@ def features_page():
 @app.route("/playlist", methods=["POST", "GET"])
 def playlist_page():
     if request.method == "POST":
+        # Get the cover art for the top 4 tracks for rendering in next page
+        top_4_tracks_images = []
+        top_30 = session.get("top_30_tracks")
+        for track in range(4):
+            cover_art = top_30[track]["album_art"]
+            top_4_tracks_images.append(cover_art)
+
+        session["top_4_tracks_images"] = top_4_tracks_images
+
         # Render create playlist template and pass the final playlist
         return redirect(url_for("create_playlist_page"))
     
@@ -206,9 +216,10 @@ def create_playlist_page():
             flash('Playlist created successfully!')
         else:
             flash('Playlist creation failed, please try again')
-            return render_template("saveToSpotify.html", playlist=session.get("top_30_tracks"))
         
-    return render_template("saveToSpotify.html", playlist=session.get("top_30_tracks"))
+    today = datetime.today()
+    formatted_date = today.strftime('%m-%d-%Y')
+    return render_template("saveToSpotify.html", top_4_tracks_images=session.get("top_4_tracks_images"), today=formatted_date)
 
 
 
