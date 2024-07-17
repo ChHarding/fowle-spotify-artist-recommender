@@ -5,6 +5,7 @@ from flask_session import Session
 import time
 from datetime import datetime
 import os
+import shutil
 from dotenv import load_dotenv
 import helper_functions as helpers
 
@@ -212,15 +213,37 @@ def create_playlist_page():
     if request.method == "POST":
         playlist_name = request.form.get('playlist_name')
         success = helpers.create_new_playlist(session.get("top_30_tracks"), session.get("sp"), playlist_name)
+        result = ""
         if success == True:
-            flash('Playlist created successfully!')
+            result = "success"
         else:
-            flash('Playlist creation failed, please try again')
+            result = "error"
+        return redirect(url_for("result_page", result=result))
         
     today = datetime.today()
     formatted_date = today.strftime('%m-%d-%Y')
     return render_template("saveToSpotify.html", top_4_tracks_images=session.get("top_4_tracks_images"), today=formatted_date)
 
+
+
+
+@app.route("/result/<result>", methods=["POST", "GET"])
+def result_page(result):
+    if request.method == "POST":
+        if result == "success":
+            return redirect(url_for("new_or_familiar_page"))
+        else:
+            return redirect(url_for("create_playlist_page"))
+        
+    message = ""
+    button_message = ""
+    if result == "success":
+        message = "Your playlist was successfully added to Spotify!"
+        button_message = "I want another playlist!"
+    else:
+        message = "Something went wrong. Please try again."
+        button_message = "Try again"
+    return render_template("resultsPage.html", message=message, again=button_message)
 
 
 

@@ -11,24 +11,9 @@
             </div>
             <form method="post" class="namePlaylistForm">
                 <input type="text" name="playlist_name" class="namePlaylistInput" value="My Playlist {{ today }}">
-                <input type="submit" value="Save to Spotify" class="uiButton" onclick="hideContentOnSuccess()">
+                <input type="submit" value="Save to Spotify" class="uiButton">
             </form>
         </div>
     </div>
-    <div class="successMessageContainer">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <h2 class="appPrompt">{{ message }}</h2>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
-    <script>
-        function hideContentOnSuccess() {
-            var pageContent = document.getElementById("savePlaylistBodyContainer");
-            pageContent.style.display = "none";
-        }
-    </script>
 </div>
 {% endblock %}

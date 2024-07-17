@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bodyContent">
+    <h2 class="appPrompt">{{ message }}</h2>
+    <div class="newOrFamiliarButtonsContainer">
+        <form method="post" class="tryAgainButtonForm">
+            <input type="hidden" name="goAgain" value="goAgain">
+            <input type="submit" value="{{ again }}" class="uiButton">
+        </form>
+    </div>
+</div>
+{% endblock %}
