@@ -32,7 +32,7 @@ app.secret_key = "lk3j24h25iojflasdjk9fjio"
 app.config['SESSION_COOKIE_NAME'] = "Playlist Maker Cookie"
 app.config['SESSION_TYPE'] = 'filesystem' # for flask_session
 app.config['SECRET_KEY'] = 'asdflksdfljkwefhbn2354g'
-TOKEN_INFO = "token_info" # 
+TOKEN_INFO = "token_info"
 
 # Instantiate flask_session library
 Session(app)
