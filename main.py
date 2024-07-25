@@ -297,7 +297,6 @@ def playlist_page():
         POST: Redirects to create_playlist_page.
     '''
 
-    # GET
     if request.method == "POST":
 
         # Get the cover art for the first 4 tracks for rendering in next page
@@ -313,6 +312,7 @@ def playlist_page():
         # Render create playlist template and pass the final playlist
         return redirect(url_for("create_playlist_page"))
     
+    # GET
     # Returns the top 30 tracks, randomized for a more engaging listening experience
     top_30_tracks = helpers.get_final_playlist(session.get("track_list"), session.get("sp"))
     session["top_30_tracks"] = top_30_tracks
@@ -384,7 +384,6 @@ def result_page(result):
             return redirect(url_for("create_playlist_page"))
 
     # GET 
-
     message = ""
     button_message = ""
 
