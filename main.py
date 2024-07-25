@@ -228,6 +228,7 @@ def genres_page(new_or_familiar):
         session.update({"track_list": track_list_with_genres})
 
     if new_or_familiar == 'familiar':
+        
         # Retain original track_list and set artist genres
         track_list_with_genres = helpers.set_artist_genres(session.get("track_list"), session.get("sp"))
         session.update({"track_list": track_list_with_genres})
